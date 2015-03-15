@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Particles</title>
+    <style>
+        html, body {
+            min-height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+        .space {
+            perspective: 400px;
+            background: linear-gradient(to bottom, #110021 0%, #170026 66%);
+        }
+        .canvas {
+            transform: rotate3d(1, -1, 1, 0deg);
+            transform-style: preserve-3d;
+/*
+            -webkit-animation: rotate 36s infinite linear;
+            animation: rotate 36s infinite linear;
+            perspective: 400px;
+*/
+        }
+        .canvas > p {
+            position: absolute;
+            margin: 0;
+            padding: 0;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            color: rgba(255, 252, 226, .6);
+            border: 1px solid rgb(255, 252, 226);
+            box-shadow: 0 0 3px 1px;
+        }
+        .canvas > .exploding {
+            color: rgba(237, 79, 52, .6);
+            border-color: rgba(237, 79, 52, 1);
+        }
+        .canvas > .newBorn {
+            color: rgba(255, 255, 255, .6);
+            border-color: rgba(255, 255, 255, 1);
+        }
+        @-webkit-keyframes rotate {
+            from {
+                transform: rotate3d(1, -1, 1, 0deg);
+            }
+            to {
+                transform: rotate3d(1, -1, 1, 360deg);
+            }
+        }
+        @keyframes rotate {
+            from {
+                transform: rotate3d(1, -1, 1, 0deg);
+            }
+            to {
+                transform: rotate3d(1, -1, 1, 360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <script src="utils.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
