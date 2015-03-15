@@ -28,8 +28,6 @@
         this.particles = [];
 
         spaceElement = document.createElement('div');
-        spaceElement.style.width = this.params.window.width + 'px';
-        spaceElement.style.height = this.params.window.height + 'px';
         spaceElement.className = 'space';
         this.element = document.createElement('div');
         this.element.style.width = this.params.window.width + 'px';

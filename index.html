@@ -14,17 +14,23 @@
             overflow: hidden;
         }
         .space {
-            perspective: 400px;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            text-align: center;
             background: linear-gradient(to bottom, #110021 0%, #170026 66%);
         }
+        .space::before {
+            content: '';
+            display: inline-block;
+            height: 100%;
+            vertical-align: middle;
+        }
         .canvas {
-            transform: rotate3d(1, -1, 1, 0deg);
-            transform-style: preserve-3d;
-/*
-            -webkit-animation: rotate 36s infinite linear;
-            animation: rotate 36s infinite linear;
-            perspective: 400px;
-*/
+            display: inline-block;
+            vertical-align: middle;
         }
         .canvas > p {
             position: absolute;
@@ -44,22 +50,6 @@
         .canvas > .newBorn {
             color: rgba(255, 255, 255, .6);
             border-color: rgba(255, 255, 255, 1);
-        }
-        @-webkit-keyframes rotate {
-            from {
-                transform: rotate3d(1, -1, 1, 0deg);
-            }
-            to {
-                transform: rotate3d(1, -1, 1, 360deg);
-            }
-        }
-        @keyframes rotate {
-            from {
-                transform: rotate3d(1, -1, 1, 0deg);
-            }
-            to {
-                transform: rotate3d(1, -1, 1, 360deg);
-            }
         }
     </style>
 </head>
