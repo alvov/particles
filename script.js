@@ -284,7 +284,7 @@
         return masses;
     };
     
-    var space = new Space();
+    space = new Space();
     
     space.generateParticle({
         x: space.params.window.center.x,
