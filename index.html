@@ -28,11 +28,15 @@
             height: 100%;
             vertical-align: middle;
         }
-        .canvas {
+        .universe {
             display: inline-block;
             vertical-align: middle;
+            transform-style: preserve-3d;
+            animation: rotation 40s linear infinite;
+            /* large perspective to reduce scewing when spinning */
+            perspective: 100000px;
         }
-        .canvas > p {
+        .universe > p {
             position: absolute;
             margin: 0;
             padding: 0;
@@ -43,13 +47,18 @@
             border: 1px solid rgb(255, 252, 226);
             box-shadow: 0 0 3px 1px;
         }
-        .canvas > .exploding {
+        .universe > .exploding {
             color: rgba(237, 79, 52, .6);
             border-color: rgba(237, 79, 52, 1);
         }
-        .canvas > .newBorn {
+        .universe > .newBorn {
             color: rgba(255, 255, 255, .6);
             border-color: rgba(255, 255, 255, 1);
+        }
+
+        @keyframes rotation {
+            0 { transform: rotate3d(1, 1, 1, 0deg); }
+            100% { transform: rotate3d(1, 1, 1, 360deg); }
         }
     </style>
 </head>
