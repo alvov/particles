@@ -32,7 +32,6 @@
             display: inline-block;
             vertical-align: middle;
             transform-style: preserve-3d;
-            animation: rotation 40s linear infinite;
             /* large perspective to reduce scewing when spinning */
             perspective: 100000px;
         }
@@ -54,11 +53,6 @@
         .universe > .newBorn {
             color: rgba(255, 255, 255, .6);
             border-color: rgba(255, 255, 255, 1);
-        }
-
-        @keyframes rotation {
-            0 { transform: rotate3d(1, 1, 1, 0deg); }
-            100% { transform: rotate3d(1, 1, 1, 360deg); }
         }
     </style>
 </head>

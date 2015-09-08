@@ -2,7 +2,8 @@
     'use strict';
 
     const COLLISION_DISTANCE = 3,
-        EXPLOSION_TIME = 2000,
+        EXPLOSION_TIME = 2000, // in ms
+        ROTATION_TIME = 30, // in seconds
         MIN_MASS = 5,
         MAX_MASS = 90,
         G = 0.00667384; // IRL: G / Math.pow(10, 10)
@@ -15,6 +16,8 @@
         this.universeSize = Math.min(window.innerWidth, window.innerHeight);
         this.universeCenter = [this.universeSize / 2, this.universeSize / 2, 0];
         this.particles = [];
+
+        this.rotationAngle = 0;
 
         var spaceElement = document.createElement('div');
         spaceElement.className = 'space';
@@ -75,6 +78,10 @@
      * Renders particles and launches cycle
      */
     Space.prototype.render = function() {
+        // space rotation
+        this.element.style.transform = 'rotate3d(1, 1, 1, ' + utils.round(this.rotationAngle, 2) + 'deg)';
+
+        // render particles
         this.particles.forEach(function(curParticle) {
             curParticle.render();
         });
@@ -87,6 +94,12 @@
      * Calculates new particles position/state
      */
     Space.prototype.step = function() {
+        // count rotation angle
+        this.rotationAngle += (360 / ROTATION_TIME) * (1 / 60);
+        if (this.rotationAngle > 360) {
+            this.rotationAngle -= 360;
+        }
+
         // count speed
         this.particles.forEach(function(curParticle) {
             var forcesList = [];
@@ -265,7 +278,9 @@
                 this.pos.map(function(value) {
                     return utils.round(value, 0) + 'px';
                 }).join(',') +
-            ')';
+            ')' +
+            // rotate particles so that they always look "at us"
+            ' rotate3d(1, 1, 1, -' + this.parent.rotationAngle + 'deg)';
         }
     };
 
