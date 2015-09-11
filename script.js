@@ -6,14 +6,18 @@
         ROTATION_TIME = 30, // in seconds
         MIN_MASS = 5,
         MAX_MASS = 90,
+        ROTATION_VECTOR = '0, 1, 0',
+        //ETHER_LAYERS = 1,
         G = 0.00667384; // IRL: G / Math.pow(10, 10)
+
+    var rotationStep = (360 / ROTATION_TIME) * (1 / 60);
 
     /**
      * Space constructor
      * @constructor
      */
     var Space = function() {
-        this.universeSize = Math.min(window.innerWidth, window.innerHeight);
+        this.universeSize = Math.min(window.innerWidth, window.innerHeight) / 2;
         this.universeCenter = [this.universeSize / 2, this.universeSize / 2, 0];
         this.particles = [];
 
@@ -21,6 +25,14 @@
 
         var spaceElement = document.createElement('div');
         spaceElement.className = 'space';
+        spaceElement.style.perspective = this.universeSize / 2 + 'px';
+        //var etherStep = Math.floor(this.universeSize / (2 * ETHER_LAYERS));
+        //for (var i = 0; i < ETHER_LAYERS; i++) {
+        //    var ether = document.createElement('div');
+        //    ether.className = 'ether';
+        //    ether.style.transform = 'translate3d(0, 0, ' + (i * etherStep) + 'px)';
+        //    spaceElement.appendChild(ether);
+        //}
         this.element = document.createElement('div');
         this.element.style.width = this.universeSize + 'px';
         this.element.style.height = this.universeSize + 'px';
@@ -79,7 +91,7 @@
      */
     Space.prototype.render = function() {
         // space rotation
-        this.element.style.transform = 'rotate3d(1, 1, 1, ' + utils.round(this.rotationAngle, 2) + 'deg)';
+        this.element.style.transform = 'rotate3d(' + ROTATION_VECTOR + ', ' + utils.round(this.rotationAngle, 2) + 'deg)';
 
         // render particles
         this.particles.forEach(function(curParticle) {
@@ -95,7 +107,7 @@
      */
     Space.prototype.step = function() {
         // count rotation angle
-        this.rotationAngle += (360 / ROTATION_TIME) * (1 / 60);
+        this.rotationAngle += rotationStep;
         if (this.rotationAngle > 360) {
             this.rotationAngle -= 360;
         }
@@ -280,7 +292,7 @@
                 }).join(',') +
             ')' +
             // rotate particles so that they always look "at us"
-            ' rotate3d(1, 1, 1, -' + this.parent.rotationAngle + 'deg)';
+            ' rotate3d(' + ROTATION_VECTOR + ', -' + utils.round(this.parent.rotationAngle, 2) + 'deg)';
         }
     };
 

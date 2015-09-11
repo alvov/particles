@@ -20,7 +20,7 @@
             bottom: 0;
             left: 0;
             text-align: center;
-            background: linear-gradient(to bottom, #110021 0%, #170026 66%);
+            background: rgb(17, 0, 33);
         }
         .space::before {
             content: '';
@@ -28,12 +28,19 @@
             height: 100%;
             vertical-align: middle;
         }
+        /*.ether {*/
+            /*position: absolute;*/
+            /*top: 100px;*/
+            /*right: 100px;*/
+            /*bottom: 100px;*/
+            /*left: 100px;*/
+            /*background: rgba(17, 0, 33, .1);*/
+            /*box-shadow: 0 0 0 1px #fff;*/
+        /*}*/
         .universe {
             display: inline-block;
             vertical-align: middle;
             transform-style: preserve-3d;
-            /* large perspective to reduce scewing when spinning */
-            perspective: 100000px;
         }
         .universe > p {
             position: absolute;
