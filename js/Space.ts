@@ -97,8 +97,8 @@ export default class Space {
                     collided = true;
                 }
                 if (
-                    curParticle.state.value !== 'newBorn' &&
-                    otherParticle.state.value !== 'newBorn'
+                    curParticle.state.value !== 'new-born' &&
+                    otherParticle.state.value !== 'new-born'
                 ) {
                     if (distance <= constants.COLLISION_DISTANCE) {
                         curParticle.collision(otherParticle);
@@ -110,7 +110,7 @@ export default class Space {
             if (curParticle.state.value === 'destroyed') {
                 return;
             }
-            if (curParticle.state.value === 'newBorn' && !collided) {
+            if (curParticle.state.value === 'new-born' && !collided) {
                 curParticle.state.set('default');
             }
             if (forcesList.length) {

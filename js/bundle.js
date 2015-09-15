@@ -236,8 +236,8 @@ var Space = (function () {
                 if (distance <= constants_1.default.COLLISION_DISTANCE) {
                     collided = true;
                 }
-                if (curParticle.state.value !== 'newBorn' &&
-                    otherParticle.state.value !== 'newBorn') {
+                if (curParticle.state.value !== 'new-born' &&
+                    otherParticle.state.value !== 'new-born') {
                     if (distance <= constants_1.default.COLLISION_DISTANCE) {
                         curParticle.collision(otherParticle);
                     }
@@ -249,7 +249,7 @@ var Space = (function () {
             if (curParticle.state.value === 'destroyed') {
                 return;
             }
-            if (curParticle.state.value === 'newBorn' && !collided) {
+            if (curParticle.state.value === 'new-born' && !collided) {
                 curParticle.state.set('default');
             }
             if (forcesList.length) {
