@@ -1,0 +1,48 @@
+html, body {
+    min-height: 100%;
+    padding: 0;
+    margin: 0;
+}
+body {
+    height: 100%;
+    overflow: hidden;
+}
+.space {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    text-align: center;
+    background: rgb(17, 0, 33);
+}
+    .space::before {
+        content: '';
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+    }
+    .universe {
+        display: inline-block;
+        vertical-align: middle;
+        transform-style: preserve-3d;
+    }
+        .universe > p {
+            position: absolute;
+            margin: 0;
+            padding: 0;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            color: rgba(255, 252, 226, .6);
+            border: 1px solid rgb(255, 252, 226);
+            box-shadow: 0 0 3px 1px;
+        }
+        .universe > .exploding {
+            color: rgba(237, 79, 52, .6);
+            border-color: rgba(237, 79, 52, 1);
+        }
+        .universe > .new-born {
+            color: rgba(255, 255, 255, .6);
+            border-color: rgba(255, 255, 255, 1);
+        }

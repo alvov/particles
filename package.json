@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "gulp": "3.9.0",
+    "browserify": "11.1.0",
+    "tsify": "0.11.12",
+    "vinyl-source-stream": "1.1.0",
+    "vinyl-buffer": "1.0.0"
+  },
+  "name": "particles",
+  "version": "1.0.0"
+}
