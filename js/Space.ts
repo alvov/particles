@@ -14,7 +14,8 @@ export default class Space {
     universeCenter: number[];
     particles: Particle[];
     rotationAngle: number;
-    element: HTMLElement;
+    spaceElement: HTMLElement;
+    universeElement: HTMLElement;
     constructor() {
         this.universeSize = Math.min(window.innerWidth, window.innerHeight) / 2;
         this.universeCenter = [this.universeSize / 2, this.universeSize / 2, 0];
@@ -22,15 +23,15 @@ export default class Space {
 
         this.rotationAngle = 0;
 
-        var spaceElement = document.createElement('div');
-        spaceElement.className = 'space';
-        spaceElement.style.perspective = this.universeSize / 2 + 'px';
-        this.element = document.createElement('div');
-        this.element.style.width = this.universeSize + 'px';
-        this.element.style.height = this.universeSize + 'px';
-        this.element.className = 'universe';
-        spaceElement.appendChild(this.element);
-        document.body.appendChild(spaceElement);
+        this.spaceElement = document.createElement('div');
+        this.spaceElement.className = 'space';
+        this.spaceElement.style.perspective = this.universeSize / 2 + 'px';
+        this.universeElement = document.createElement('div');
+        this.universeElement.style.width = this.universeSize + 'px';
+        this.universeElement.style.height = this.universeSize + 'px';
+        this.universeElement.className = 'universe';
+        this.spaceElement.appendChild(this.universeElement);
+        document.body.appendChild(this.spaceElement);
     }
 
     /**
@@ -39,7 +40,7 @@ export default class Space {
      */
     generateParticle(params: ParticleParams) {
         var newParticle = new Particle(params, this);
-        this.element.appendChild(newParticle.element);
+        this.universeElement.appendChild(newParticle.element);
         this.particles.push(newParticle);
     }
 
@@ -49,7 +50,7 @@ export default class Space {
      */
     destroyParticle(particle: Particle) {
         var particleIndex = this.particles.findIndex(curParticle => curParticle === particle);
-        this.element.removeChild(particle.element);
+        this.universeElement.removeChild(particle.element);
         this.particles.splice(particleIndex, 1);
     }
 
@@ -58,7 +59,7 @@ export default class Space {
      */
     render() {
         // space rotation
-        this.element.style.transform =
+        this.universeElement.style.transform =
             `rotate3d(${constants.ROTATION_VECTOR}, ${Utils.round(this.rotationAngle, 2)}deg)`;
 
         // render particles

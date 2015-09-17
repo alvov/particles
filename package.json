@@ -6,6 +6,9 @@
     "vinyl-source-stream": "1.1.0",
     "vinyl-buffer": "1.0.0"
   },
+  "devDependencies": {
+    "http-server": "0.8.0"
+  },
   "name": "particles",
   "version": "1.0.0"
 }

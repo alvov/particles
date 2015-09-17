@@ -1,4 +1,75 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/**
+ * Timer constructor
+ */
+var Timer = (function () {
+    function Timer() {
+        var _this = this;
+        this.element = document.createElement('div');
+        this.element.className = 'timer';
+        this.startTime = Date.now();
+        this.worker = new Worker('js/timerWorker.js');
+        this.worker.addEventListener('message', function () {
+            _this.tick();
+        }, false);
+        this.worker.postMessage('start');
+        this.tick();
+    }
+    /**
+     * Updates time string
+     */
+    Timer.prototype.tick = function () {
+        var delta = new Date(Date.now() - this.startTime);
+        var hours = delta.getUTCHours().toString();
+        var minutes = ('0' + delta.getMinutes()).substr(-2);
+        var seconds = ('0' + delta.getSeconds()).substr(-2);
+        this.element.innerHTML = (hours || '00') + ":" + minutes + ":" + seconds;
+    };
+    return Timer;
+})();
+/**
+ * Data row constructor
+ */
+var DataItem = (function () {
+    function DataItem(params) {
+        var _this = this;
+        this.element = document.createElement('div');
+        this.element.className = 'data-item';
+        this.element.innerHTML = params.label + ':';
+        this.dataContainerElement = document.createElement('div');
+        this.dataContainerElement.className = 'data-container';
+        this.element.appendChild(this.dataContainerElement);
+        // periodically updating data
+        this.timer = setInterval(function () {
+            _this.dataContainerElement.innerHTML = params.getter();
+        }, params.interval);
+    }
+    return DataItem;
+})();
+/**
+ * Info block constructor
+ */
+var Info = (function () {
+    function Info() {
+        this.element = document.createElement('div');
+        this.element.className = 'info';
+        this.timer = new Timer();
+        this.element.appendChild(this.timer.element);
+        document.body.appendChild(this.element);
+    }
+    /**
+     * Creates new data row
+     * @param {Object} params
+     */
+    Info.prototype.createDataItem = function (params) {
+        var dataItem = new DataItem(params);
+        this.element.appendChild(dataItem.element);
+    };
+    return Info;
+})();
+exports.default = Info;
+
+},{}],2:[function(require,module,exports){
 var Utils_1 = require('./Utils');
 var constants_1 = require('./constants');
 /**
@@ -161,7 +232,7 @@ var Particle = (function () {
 })();
 exports.default = Particle;
 
-},{"./Utils":3,"./constants":4}],2:[function(require,module,exports){
+},{"./Utils":4,"./constants":5}],3:[function(require,module,exports){
 var Particle_1 = require('./Particle');
 var Utils_1 = require('./Utils');
 var constants_1 = require('./constants');
@@ -176,15 +247,15 @@ var Space = (function () {
         this.universeCenter = [this.universeSize / 2, this.universeSize / 2, 0];
         this.particles = [];
         this.rotationAngle = 0;
-        var spaceElement = document.createElement('div');
-        spaceElement.className = 'space';
-        spaceElement.style.perspective = this.universeSize / 2 + 'px';
-        this.element = document.createElement('div');
-        this.element.style.width = this.universeSize + 'px';
-        this.element.style.height = this.universeSize + 'px';
-        this.element.className = 'universe';
-        spaceElement.appendChild(this.element);
-        document.body.appendChild(spaceElement);
+        this.spaceElement = document.createElement('div');
+        this.spaceElement.className = 'space';
+        this.spaceElement.style.perspective = this.universeSize / 2 + 'px';
+        this.universeElement = document.createElement('div');
+        this.universeElement.style.width = this.universeSize + 'px';
+        this.universeElement.style.height = this.universeSize + 'px';
+        this.universeElement.className = 'universe';
+        this.spaceElement.appendChild(this.universeElement);
+        document.body.appendChild(this.spaceElement);
     }
     /**
      * Generates particle with given parameters
@@ -192,7 +263,7 @@ var Space = (function () {
      */
     Space.prototype.generateParticle = function (params) {
         var newParticle = new Particle_1.default(params, this);
-        this.element.appendChild(newParticle.element);
+        this.universeElement.appendChild(newParticle.element);
         this.particles.push(newParticle);
     };
     /**
@@ -201,7 +272,7 @@ var Space = (function () {
      */
     Space.prototype.destroyParticle = function (particle) {
         var particleIndex = this.particles.findIndex(function (curParticle) { return curParticle === particle; });
-        this.element.removeChild(particle.element);
+        this.universeElement.removeChild(particle.element);
         this.particles.splice(particleIndex, 1);
     };
     /**
@@ -209,7 +280,7 @@ var Space = (function () {
      */
     Space.prototype.render = function () {
         // space rotation
-        this.element.style.transform =
+        this.universeElement.style.transform =
             "rotate3d(" + constants_1.default.ROTATION_VECTOR + ", " + Utils_1.default.round(this.rotationAngle, 2) + "deg)";
         // render particles
         this.particles.forEach(function (curParticle) {
@@ -224,7 +295,7 @@ var Space = (function () {
      */
     Space.prototype.step = function () {
         // next step
-        if (this.particles.length /* && iterations > 0*/) {
+        if (this.particles.length) {
             setTimeout(this.step.bind(this), 1000 / 60);
         }
         // count rotation angle
@@ -286,7 +357,7 @@ var Space = (function () {
 })();
 exports.default = Space;
 
-},{"./Particle":1,"./Utils":3,"./constants":4}],3:[function(require,module,exports){
+},{"./Particle":2,"./Utils":4,"./constants":5}],4:[function(require,module,exports){
 var PubSub = (function () {
     function PubSub() {
         this.pubSubHash = {};
@@ -457,7 +528,7 @@ var Utils = (function () {
 })();
 exports.default = Utils;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 exports.default = {
     COLLISION_DISTANCE: 3,
     EXPLOSION_TIME: 2000,
@@ -468,19 +539,50 @@ exports.default = {
     G: 0.00667384 // IRL: G / Math.pow(10, 10)
 };
 
-},{}],5:[function(require,module,exports){
-'use strict';
+},{}],6:[function(require,module,exports){
 var Space_1 = require('./Space');
+var Info_1 = require('./Info');
+var Utils_1 = require('./Utils');
 var space = new Space_1.default();
 space.generateParticle({
     dir: [0, 0, 0],
     pos: space.universeCenter.slice(),
     speed: 0,
-    mass: 800 // some kind of a big bang
+    mass: 1000 // some kind of a big bang
 });
 space.render();
 space.step();
+// statistics info
+var info = new Info_1.default();
+// particles count
+info.createDataItem({
+    label: 'count',
+    getter: function () {
+        return space.particles.length;
+    },
+    interval: 500
+});
+// particles median distance relative to universe size
+info.createDataItem({
+    label: 'distance',
+    getter: function () {
+        var distances = [];
+        for (var i = 0; i < space.particles.length; i++) {
+            for (var j = i + 1; j < space.particles.length; j++) {
+                distances.push(Utils_1.default.Vector.getDistance(space.particles[i].pos, space.particles[j].pos));
+            }
+        }
+        if (distances.length) {
+            distances.sort(function (a, b) { return a - b; });
+            return Math.floor(100 * distances[Math.floor(distances.length / 2)] / space.universeSize) + '%';
+        }
+        else {
+            return '0%';
+        }
+    },
+    interval: 500
+});
 
-},{"./Space":2}],6:[function(require,module,exports){
+},{"./Info":1,"./Space":3,"./Utils":4}],7:[function(require,module,exports){
 
-},{}]},{},[6,5]);
+},{}]},{},[7,6]);
