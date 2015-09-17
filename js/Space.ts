@@ -74,6 +74,11 @@ export default class Space {
      * Calculates new particles position/state
      */
     step() {
+        // next step
+        if (this.particles.length) {
+            setTimeout(this.step.bind(this), 1000 / 60);
+        }
+
         // count rotation angle
         this.rotationAngle += rotationStep;
         if (this.rotationAngle > 360) {
@@ -81,16 +86,18 @@ export default class Space {
         }
 
         // count speed
-        this.particles.forEach(curParticle => {
-            var forcesList = [];
-            var collided = false;
-            this.particles.forEach(otherParticle => {
+        for (let i = 0; i < this.particles.length; i++) {
+            let curParticle = this.particles[i];
+            let forcesList = [];
+            let collided = false;
+            for (let j = 0; j < this.particles.length; j++) {
+                let otherParticle = this.particles[j];
                 if (
                     otherParticle === curParticle ||
                     curParticle.state.value === 'destroyed' ||
                     otherParticle.state.value === 'destroyed'
                 ) {
-                    return;
+                    break;
                 }
                 var distance = Utils.Vector.getDistance(curParticle.pos, otherParticle.pos);
                 if (distance <= constants.COLLISION_DISTANCE) {
@@ -103,22 +110,26 @@ export default class Space {
                     if (distance <= constants.COLLISION_DISTANCE) {
                         curParticle.collision(otherParticle);
                     } else {
-                        forcesList.push(curParticle.getForce(otherParticle));
+                        forcesList.push(curParticle.getForce(otherParticle, distance));
                     }
                 }
-            });
+            }
             if (curParticle.state.value === 'destroyed') {
-                return;
+                break;
             }
             if (curParticle.state.value === 'new-born' && !collided) {
                 curParticle.state.set('default');
             }
             if (forcesList.length) {
-                var sumForce = forcesList.reduce(Utils.Vector.add);
-                var boost = sumForce.map(value => value / curParticle.mass);
+                let sumForce = forcesList.reduce(Utils.Vector.add);
+                let boost = [];
+                for (let k = 0; k < sumForce.length; k++) {
+                    boost.push(sumForce[k] / curParticle.mass);
+                }
                 curParticle.speed = Utils.Vector.add(curParticle.speed, boost);
             }
-        });
+        }
+
         // apply speed
         this.particles.forEach(curParticle => {
             curParticle.move();
@@ -127,9 +138,5 @@ export default class Space {
                 curParticle.delayedExplosion();
             }
         });
-        // next step
-        if (this.particles.length) {
-            setTimeout(this.step.bind(this), 1000 / 60);
-        }
     }
 }

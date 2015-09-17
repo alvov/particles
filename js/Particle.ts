@@ -68,18 +68,24 @@ export default class Particle {
     /**
      * Returns value of gravity force relative to given particle
      * @param {Particle} otherParticle
+     * @param {number} distance
      * @returns {Array}
      */
-    getForce(otherParticle: Particle): number[] {
-        var distance = Utils.Vector.getDistance(this.pos, otherParticle.pos);
+    getForce(otherParticle: Particle, distance: number): number[] {
         if (!distance) {
             return [0, 0, 0];
         } else {
             var force = constants.G * this.mass * otherParticle.mass / Math.pow(distance, 2);
-            var dir = this.pos.map((value, i) => otherParticle.pos[i] - value);
-            dir = Utils.Vector.normalize(dir);
-
-            return dir.map(value => value * force);
+            var result = [];
+            for (let i = 0; i < this.pos.length; i++) {
+                result.push(otherParticle.pos[i] - this.pos[i]);
+            }
+            // direction
+            result = Utils.Vector.normalize(result);
+            for (let i = 0; i < result.length; i++) {
+                result[i] *= force;
+            }
+            return result;
         }
     }
 
@@ -112,7 +118,7 @@ export default class Particle {
         if (this.pos.some((value, i) => Utils.round(value, 6) !== Utils.round(this.oldPos[i], 6))) {
             // rotate particles so that they always look "at us"
             this.element.style.transform =
-                `translate3d(${this.pos.map(value => Utils.round(value, 0) + 'px').join(',')})
+                `translate3d(${this.pos.map(value => Utils.round(value, 1) + 'px').join(',')})
                 rotate3d(${constants.ROTATION_VECTOR}, -${Utils.round(this.parent.rotationAngle, 2)}deg)`;
         }
     }

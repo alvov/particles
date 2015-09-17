@@ -48,18 +48,25 @@ var Particle = (function () {
     /**
      * Returns value of gravity force relative to given particle
      * @param {Particle} otherParticle
+     * @param {number} distance
      * @returns {Array}
      */
-    Particle.prototype.getForce = function (otherParticle) {
-        var distance = Utils_1.default.Vector.getDistance(this.pos, otherParticle.pos);
+    Particle.prototype.getForce = function (otherParticle, distance) {
         if (!distance) {
             return [0, 0, 0];
         }
         else {
             var force = constants_1.default.G * this.mass * otherParticle.mass / Math.pow(distance, 2);
-            var dir = this.pos.map(function (value, i) { return otherParticle.pos[i] - value; });
-            dir = Utils_1.default.Vector.normalize(dir);
-            return dir.map(function (value) { return value * force; });
+            var result = [];
+            for (var i = 0; i < this.pos.length; i++) {
+                result.push(otherParticle.pos[i] - this.pos[i]);
+            }
+            // direction
+            result = Utils_1.default.Vector.normalize(result);
+            for (var i = 0; i < result.length; i++) {
+                result[i] *= force;
+            }
+            return result;
         }
     };
     /**
@@ -89,7 +96,7 @@ var Particle = (function () {
         if (this.pos.some(function (value, i) { return Utils_1.default.round(value, 6) !== Utils_1.default.round(_this.oldPos[i], 6); })) {
             // rotate particles so that they always look "at us"
             this.element.style.transform =
-                "translate3d(" + this.pos.map(function (value) { return Utils_1.default.round(value, 0) + 'px'; }).join(',') + ")\n                rotate3d(" + constants_1.default.ROTATION_VECTOR + ", -" + Utils_1.default.round(this.parent.rotationAngle, 2) + "deg)";
+                "translate3d(" + this.pos.map(function (value) { return Utils_1.default.round(value, 1) + 'px'; }).join(',') + ")\n                rotate3d(" + constants_1.default.ROTATION_VECTOR + ", -" + Utils_1.default.round(this.parent.rotationAngle, 2) + "deg)";
         }
     };
     /**
@@ -216,21 +223,26 @@ var Space = (function () {
      * Calculates new particles position/state
      */
     Space.prototype.step = function () {
-        var _this = this;
+        // next step
+        if (this.particles.length /* && iterations > 0*/) {
+            setTimeout(this.step.bind(this), 1000 / 60);
+        }
         // count rotation angle
         this.rotationAngle += rotationStep;
         if (this.rotationAngle > 360) {
             this.rotationAngle -= 360;
         }
         // count speed
-        this.particles.forEach(function (curParticle) {
+        for (var i = 0; i < this.particles.length; i++) {
+            var curParticle = this.particles[i];
             var forcesList = [];
             var collided = false;
-            _this.particles.forEach(function (otherParticle) {
+            for (var j = 0; j < this.particles.length; j++) {
+                var otherParticle = this.particles[j];
                 if (otherParticle === curParticle ||
                     curParticle.state.value === 'destroyed' ||
                     otherParticle.state.value === 'destroyed') {
-                    return;
+                    break;
                 }
                 var distance = Utils_1.default.Vector.getDistance(curParticle.pos, otherParticle.pos);
                 if (distance <= constants_1.default.COLLISION_DISTANCE) {
@@ -242,22 +254,25 @@ var Space = (function () {
                         curParticle.collision(otherParticle);
                     }
                     else {
-                        forcesList.push(curParticle.getForce(otherParticle));
+                        forcesList.push(curParticle.getForce(otherParticle, distance));
                     }
                 }
-            });
+            }
             if (curParticle.state.value === 'destroyed') {
-                return;
+                break;
             }
             if (curParticle.state.value === 'new-born' && !collided) {
                 curParticle.state.set('default');
             }
             if (forcesList.length) {
                 var sumForce = forcesList.reduce(Utils_1.default.Vector.add);
-                var boost = sumForce.map(function (value) { return value / curParticle.mass; });
+                var boost = [];
+                for (var k = 0; k < sumForce.length; k++) {
+                    boost.push(sumForce[k] / curParticle.mass);
+                }
                 curParticle.speed = Utils_1.default.Vector.add(curParticle.speed, boost);
             }
-        });
+        }
         // apply speed
         this.particles.forEach(function (curParticle) {
             curParticle.move();
@@ -266,10 +281,6 @@ var Space = (function () {
                 curParticle.delayedExplosion();
             }
         });
-        // next step
-        if (this.particles.length) {
-            setTimeout(this.step.bind(this), 1000 / 60);
-        }
     };
     return Space;
 })();
@@ -377,19 +388,40 @@ var Vector = (function () {
     function Vector() {
     }
     Vector.add = function (v1, v2) {
-        return v1.map(function (value, i) { return value + v2[i]; });
+        var result = [];
+        for (var i = 0; i < v1.length; i++) {
+            result.push(v1[i] + v2[i]);
+        }
+        return result;
     };
     Vector.intersect = function (v1, v2) {
-        return v1.reduce(function (prev, cur) { return prev || v2.indexOf(cur) !== -1; }, false);
+        var result = false;
+        for (var i = 0; i < v1.length; i++) {
+            if (v2.indexOf(v1[i]) !== -1) {
+                result = true;
+                break;
+            }
+        }
+        return result;
     };
     Vector.getDistance = function (vector1, vector2) {
-        return Math.sqrt(vector1
-            .map(function (value, i) { return Math.pow(value - vector2[i], 2); })
-            .reduce(function (prev, current) { return prev + current; }));
+        var tmp = 0;
+        for (var i = 0; i < vector1.length; i++) {
+            tmp += Math.pow(vector1[i] - vector2[i], 2);
+        }
+        return Math.sqrt(tmp);
     };
     Vector.normalize = function (vector) {
-        var vectorSize = Math.sqrt(vector.reduce(function (result, value) { return result + Math.pow(value, 2); }, 0));
-        return vector.map(function (value) { return value / vectorSize; });
+        var vectorSize = 0;
+        var result = [];
+        for (var i = 0; i < vector.length; i++) {
+            vectorSize += Math.pow(vector[i], 2);
+        }
+        vectorSize = Math.sqrt(vectorSize);
+        for (var i = 0; i < vector.length; i++) {
+            result.push(vector[i] / vectorSize);
+        }
+        return result;
     };
     return Vector;
 })();

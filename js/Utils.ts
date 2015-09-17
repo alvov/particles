@@ -6,14 +6,12 @@ class PubSub {
     constructor() {
         this.pubSubHash = {};
     }
-
     subscribe(event: string, callback: PubSubCallback): void {
         if (!this.pubSubHash[event]) {
             this.pubSubHash[event] = [];
         }
         this.pubSubHash[event].push(callback);
     }
-
     unsubscribe(event: string, callback?: PubSubCallback): void {
         if (callback === undefined) {
             this.pubSubHash[event] = [];
@@ -25,7 +23,6 @@ class PubSub {
             });
         }
     }
-
     publish(event: string, data: any) {
         if (this.pubSubHash[event]) {
             this.pubSubHash[event].forEach(value => {
@@ -43,14 +40,12 @@ class ObservableValue {
     constructor(public value: any) {
         this.observableValueCallbacks = [];
     }
-
     set(value: any) {
         this.value = value;
         this.observableValueCallbacks.forEach(callback => {
             callback(this.value);
         });
     }
-
     onChange(callback: ObservableValueCallback) {
         callback(this.value);
         this.observableValueCallbacks.push(callback);
@@ -104,21 +99,40 @@ class Random {
 
 class Vector {
     static add(v1: number[], v2: number[]): number[] {
-        return v1.map((value, i) => value + v2[i]);
+        var result = [];
+        for (let i = 0; i < v1.length; i++) {
+            result.push(v1[i] + v2[i]);
+        }
+        return result;
     }
     static intersect(v1: number[], v2: number[]): boolean {
-        return v1.reduce((prev, cur) => prev || v2.indexOf(cur) !== -1, false);
+        var result = false;
+        for (let i = 0; i < v1.length; i++) {
+            if (v2.indexOf(v1[i]) !== -1) {
+                result = true;
+                break;
+            }
+        }
+        return result;
     }
     static getDistance(vector1: number[], vector2: number[]): number {
-        return Math.sqrt(
-            vector1
-                .map((value, i) => Math.pow(value - vector2[i], 2))
-                .reduce((prev, current) => prev + current)
-        );
+        var tmp = 0;
+        for (let i = 0; i < vector1.length; i++) {
+            tmp += Math.pow(vector1[i] - vector2[i], 2);
+        }
+        return Math.sqrt(tmp);
     }
     static normalize(vector: number[]): number[] {
-        var vectorSize = Math.sqrt(vector.reduce((result, value) => result + Math.pow(value, 2), 0));
-        return vector.map(value => value / vectorSize);
+        var vectorSize = 0;
+        var result = [];
+        for (let i = 0; i < vector.length; i++) {
+            vectorSize += Math.pow(vector[i], 2);
+        }
+        vectorSize = Math.sqrt(vectorSize);
+        for (let i = 0; i < vector.length; i++) {
+            result.push(vector[i] / vectorSize);
+        }
+        return result;
     }
 }
 
