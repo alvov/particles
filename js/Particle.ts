@@ -20,14 +20,12 @@ export default class Particle {
     mass: number;
     speed: number[];
     element: HTMLElement;
-    private oldPos: number[];
     private oldMass: number;
     private timeouts: any;
     constructor(params: ParticleParams, private parent: Space) {
         this.state = Utils.observableValue('new-born'); // ['new-born', 'default', exploding', 'destroyed']
         this.timeouts = {};
         this.pos = params.pos;
-        this.oldPos = [];
         this.speed = params.dir.map(value => value * params.speed);
 
         this.mass = params.mass;
@@ -60,7 +58,6 @@ export default class Particle {
             (value, i) => (value * carrier.mass + provider.speed[i] * provider.mass) / commonMass
         );
 
-        carrier.oldMass = carrier.mass;
         carrier.mass = commonMass;
         provider.destroy();
     }
@@ -93,8 +90,7 @@ export default class Particle {
      * Calculates particle's new position
      */
     move(): void {
-        this.oldPos = this.pos.slice();
-        this.pos = this.pos.map((value, i) => value + this.speed[i]);
+        this.pos = Utils.Vector.add(this.pos, this.speed);
         // limit particles spread by universe size
         if (Utils.Vector.getDistance(this.pos, this.parent.universeCenter) >= this.parent.universeSize / 2) {
             this.pos.forEach((value, i) => {
@@ -114,13 +110,12 @@ export default class Particle {
     render(): void {
         if (this.oldMass !== this.mass) {
             this.element.style.boxShadow = `0 0 3px ${Math.min(4, Math.ceil(this.mass * 0.05))}px`;
+            this.oldMass = this.mass;
         }
-        if (this.pos.some((value, i) => Utils.round(value, 6) !== Utils.round(this.oldPos[i], 6))) {
-            // rotate particles so that they always look "at us"
-            this.element.style.transform =
-                `translate3d(${this.pos.map(value => Utils.round(value, 1) + 'px').join(',')})
-                rotate3d(${constants.ROTATION_VECTOR}, -${Utils.round(this.parent.rotationAngle, 2)}deg)`;
-        }
+        // rotate particles so that they always look "at us"
+        this.element.style.transform =
+            `translate3d(${this.pos.map(value => Utils.round(value, 1) + 'px').join(',')})
+            rotate3d(${constants.ROTATION_VECTOR}, -${Utils.round(this.parent.rotationAngle, 2)}deg)`;
     }
 
     /**
@@ -172,7 +167,7 @@ export default class Particle {
      */
     splitMass(): number[] {
         var particlesCount = Math.floor(this.mass / constants.MIN_MASS);
-        var masses = new Array(particlesCount);
+        var masses: number[] = new Array(particlesCount);
         masses.fill(constants.MIN_MASS);
         var remainingMass = this.mass % constants.MIN_MASS;
         while (remainingMass) {

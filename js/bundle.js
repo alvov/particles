@@ -20,7 +20,7 @@ var Timer = (function () {
      */
     Timer.prototype.tick = function () {
         var delta = new Date(Date.now() - this.startTime);
-        var hours = delta.getUTCHours().toString();
+        var hours = ('0' + delta.getUTCHours()).substr(-2);
         var minutes = ('0' + delta.getMinutes()).substr(-2);
         var seconds = ('0' + delta.getSeconds()).substr(-2);
         this.element.innerHTML = (hours || '00') + ":" + minutes + ":" + seconds;
@@ -84,7 +84,6 @@ var Particle = (function () {
         this.state = Utils_1.default.observableValue('new-born'); // ['new-born', 'default', exploding', 'destroyed']
         this.timeouts = {};
         this.pos = params.pos;
-        this.oldPos = [];
         this.speed = params.dir.map(function (value) { return value * params.speed; });
         this.mass = params.mass;
         this.oldMass = null;
@@ -112,7 +111,6 @@ var Particle = (function () {
         }
         var commonMass = carrier.mass + provider.mass;
         carrier.speed = carrier.speed.map(function (value, i) { return (value * carrier.mass + provider.speed[i] * provider.mass) / commonMass; });
-        carrier.oldMass = carrier.mass;
         carrier.mass = commonMass;
         provider.destroy();
     };
@@ -145,8 +143,7 @@ var Particle = (function () {
      */
     Particle.prototype.move = function () {
         var _this = this;
-        this.oldPos = this.pos.slice();
-        this.pos = this.pos.map(function (value, i) { return value + _this.speed[i]; });
+        this.pos = Utils_1.default.Vector.add(this.pos, this.speed);
         // limit particles spread by universe size
         if (Utils_1.default.Vector.getDistance(this.pos, this.parent.universeCenter) >= this.parent.universeSize / 2) {
             this.pos.forEach(function (value, i) {
@@ -160,15 +157,13 @@ var Particle = (function () {
      * Renders current particle's position and size
      */
     Particle.prototype.render = function () {
-        var _this = this;
         if (this.oldMass !== this.mass) {
             this.element.style.boxShadow = "0 0 3px " + Math.min(4, Math.ceil(this.mass * 0.05)) + "px";
+            this.oldMass = this.mass;
         }
-        if (this.pos.some(function (value, i) { return Utils_1.default.round(value, 6) !== Utils_1.default.round(_this.oldPos[i], 6); })) {
-            // rotate particles so that they always look "at us"
-            this.element.style.transform =
-                "translate3d(" + this.pos.map(function (value) { return Utils_1.default.round(value, 1) + 'px'; }).join(',') + ")\n                rotate3d(" + constants_1.default.ROTATION_VECTOR + ", -" + Utils_1.default.round(this.parent.rotationAngle, 2) + "deg)";
-        }
+        // rotate particles so that they always look "at us"
+        this.element.style.transform =
+            "translate3d(" + this.pos.map(function (value) { return Utils_1.default.round(value, 1) + 'px'; }).join(',') + ")\n            rotate3d(" + constants_1.default.ROTATION_VECTOR + ", -" + Utils_1.default.round(this.parent.rotationAngle, 2) + "deg)";
     };
     /**
      * Destroys particle
@@ -247,6 +242,7 @@ var Space = (function () {
         this.universeCenter = [this.universeSize / 2, this.universeSize / 2, 0];
         this.particles = [];
         this.rotationAngle = 0;
+        this.updatedStep = true;
         this.spaceElement = document.createElement('div');
         this.spaceElement.className = 'space';
         this.spaceElement.style.perspective = this.universeSize / 2 + 'px';
@@ -271,21 +267,22 @@ var Space = (function () {
      * @param {Particle} particle
      */
     Space.prototype.destroyParticle = function (particle) {
-        var particleIndex = this.particles.findIndex(function (curParticle) { return curParticle === particle; });
         this.universeElement.removeChild(particle.element);
-        this.particles.splice(particleIndex, 1);
     };
     /**
      * Renders particles and launches cycle
      */
     Space.prototype.render = function () {
-        // space rotation
-        this.universeElement.style.transform =
-            "rotate3d(" + constants_1.default.ROTATION_VECTOR + ", " + Utils_1.default.round(this.rotationAngle, 2) + "deg)";
-        // render particles
-        this.particles.forEach(function (curParticle) {
-            curParticle.render();
-        });
+        if (this.updatedStep) {
+            this.updatedStep = false;
+            // space rotation
+            this.universeElement.style.transform =
+                "rotate3d(" + constants_1.default.ROTATION_VECTOR + ", " + Utils_1.default.round(this.rotationAngle, 2) + "deg)";
+            // render particles
+            this.particles.forEach(function (curParticle) {
+                curParticle.render();
+            });
+        }
         if (this.particles.length) {
             window.requestAnimationFrame(this.render.bind(this));
         }
@@ -313,7 +310,7 @@ var Space = (function () {
                 if (otherParticle === curParticle ||
                     curParticle.state.value === 'destroyed' ||
                     otherParticle.state.value === 'destroyed') {
-                    break;
+                    continue;
                 }
                 var distance = Utils_1.default.Vector.getDistance(curParticle.pos, otherParticle.pos);
                 if (distance <= constants_1.default.COLLISION_DISTANCE) {
@@ -330,7 +327,7 @@ var Space = (function () {
                 }
             }
             if (curParticle.state.value === 'destroyed') {
-                break;
+                continue;
             }
             if (curParticle.state.value === 'new-born' && !collided) {
                 curParticle.state.set('default');
@@ -344,14 +341,16 @@ var Space = (function () {
                 curParticle.speed = Utils_1.default.Vector.add(curParticle.speed, boost);
             }
         }
+        this.particles = this.particles.filter(function (particle) { return particle.state.value !== 'destroyed'; });
         // apply speed
         this.particles.forEach(function (curParticle) {
             curParticle.move();
             // explosion
-            if (curParticle.mass > constants_1.default.MAX_MASS && ['exploding', 'destroyed'].indexOf(curParticle.state.value) === -1) {
+            if (curParticle.mass > constants_1.default.MAX_MASS && curParticle.state.value !== 'exploding') {
                 curParticle.delayedExplosion();
             }
         });
+        this.updatedStep = true;
     };
     return Space;
 })();

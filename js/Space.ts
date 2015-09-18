@@ -16,12 +16,14 @@ export default class Space {
     rotationAngle: number;
     spaceElement: HTMLElement;
     universeElement: HTMLElement;
+    private updatedStep: boolean;
     constructor() {
         this.universeSize = Math.min(window.innerWidth, window.innerHeight) / 2;
         this.universeCenter = [this.universeSize / 2, this.universeSize / 2, 0];
         this.particles = [];
 
         this.rotationAngle = 0;
+        this.updatedStep = true;
 
         this.spaceElement = document.createElement('div');
         this.spaceElement.className = 'space';
@@ -49,23 +51,25 @@ export default class Space {
      * @param {Particle} particle
      */
     destroyParticle(particle: Particle) {
-        var particleIndex = this.particles.findIndex(curParticle => curParticle === particle);
         this.universeElement.removeChild(particle.element);
-        this.particles.splice(particleIndex, 1);
     }
 
     /**
      * Renders particles and launches cycle
      */
     render() {
-        // space rotation
-        this.universeElement.style.transform =
-            `rotate3d(${constants.ROTATION_VECTOR}, ${Utils.round(this.rotationAngle, 2)}deg)`;
+        if (this.updatedStep) {
+            this.updatedStep = false;
 
-        // render particles
-        this.particles.forEach(curParticle => {
-            curParticle.render();
-        });
+            // space rotation
+            this.universeElement.style.transform =
+                `rotate3d(${constants.ROTATION_VECTOR}, ${Utils.round(this.rotationAngle, 2)}deg)`;
+
+            // render particles
+            this.particles.forEach(curParticle => {
+                curParticle.render();
+            });
+        }
         if (this.particles.length) {
             window.requestAnimationFrame(this.render.bind(this));
         }
@@ -98,7 +102,7 @@ export default class Space {
                     curParticle.state.value === 'destroyed' ||
                     otherParticle.state.value === 'destroyed'
                 ) {
-                    break;
+                    continue;
                 }
                 var distance = Utils.Vector.getDistance(curParticle.pos, otherParticle.pos);
                 if (distance <= constants.COLLISION_DISTANCE) {
@@ -116,14 +120,14 @@ export default class Space {
                 }
             }
             if (curParticle.state.value === 'destroyed') {
-                break;
+                continue;
             }
             if (curParticle.state.value === 'new-born' && !collided) {
                 curParticle.state.set('default');
             }
             if (forcesList.length) {
-                let sumForce = forcesList.reduce(Utils.Vector.add);
-                let boost = [];
+                let sumForce: number[] = forcesList.reduce(Utils.Vector.add);
+                let boost: number[] = [];
                 for (let k = 0; k < sumForce.length; k++) {
                     boost.push(sumForce[k] / curParticle.mass);
                 }
@@ -131,13 +135,17 @@ export default class Space {
             }
         }
 
+        this.particles = this.particles.filter(particle => particle.state.value !== 'destroyed');
+
         // apply speed
         this.particles.forEach(curParticle => {
             curParticle.move();
             // explosion
-            if (curParticle.mass > constants.MAX_MASS && ['exploding', 'destroyed'].indexOf(curParticle.state.value) === -1) {
+            if (curParticle.mass > constants.MAX_MASS && curParticle.state.value !== 'exploding') {
                 curParticle.delayedExplosion();
             }
         });
+
+        this.updatedStep = true;
     }
 }

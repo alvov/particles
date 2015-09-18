@@ -22,7 +22,7 @@ class Timer {
      */
     tick(): void {
         var delta:Date = new Date(Date.now() - this.startTime);
-        var hours:string = delta.getUTCHours().toString();
+        var hours:string = ('0' + delta.getUTCHours()).substr(-2);
         var minutes:string = ('0' + delta.getMinutes()).substr(-2);
         var seconds:string = ('0' + delta.getSeconds()).substr(-2);
         this.element.innerHTML = `${hours || '00'}:${minutes}:${seconds}`;
